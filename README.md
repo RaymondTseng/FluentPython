@@ -1,2 +1,2 @@
 # FluentPython
-# take some notes while reading "Fluent Python"
+take some notes while reading "Fluent Python"
