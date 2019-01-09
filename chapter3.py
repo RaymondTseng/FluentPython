@@ -34,3 +34,31 @@ value = 4
 # 好的实现
 my_dict.setdefault(key, []).append(value)
 print(my_dict)
+
+# 某个键不在映射里，但仍希望通过这个这个键读取到默认值
+# 两种方法 --> 1. defaultdict 2.自定义dict，实现__missing__方法
+import collections
+index = collections.defaultdict(list)
+index[key].append(value)
+print(index)
+# defaultdict中的default_factory只会在__getitem__中调用
+# 如d为defaultdict，d[k]会调用default_factory，d.get(k)会返回None
+
+# __missing__方法同样只会被__getitem__调用
+class StrKeyDict0(dict):
+    def __missing__(self, key):
+        if isinstance(key, str):
+            raise KeyError(key)
+        return self[key]
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    # 没有使用k in dict这种方法，因为会导致__contains__被递归调用
+    # python3中dict.keys()返回的是一个视图，在视图中查找元素速度很快
+    # python2中则返回的是一个列表，速度较慢
+    def __contains__(self, key):
+        return key in self.keys() or str(key) in self.keys()
