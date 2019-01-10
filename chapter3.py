@@ -62,3 +62,69 @@ class StrKeyDict0(dict):
     # python2中则返回的是一个列表，速度较慢
     def __contains__(self, key):
         return key in self.keys() or str(key) in self.keys()
+
+# collections.OrderedDict
+# 有序字典，添加键的时候会保持顺序，因此键的迭代次序是一致的
+# popitem方法默认删除并返回的是字典里的最后一个元素
+# popitem(last=False)调用，它删除并返回第一个被添加进去的元素
+
+# collections.ChainMap
+# 可以容纳数个不同的映射对象（多个字典），然后在进行键查找操作的时候
+# 这些对象会被当做一个整体逐个查找，直到键被找到为止
+from collections import ChainMap
+import builtins
+pylookup = ChainMap(locals(), globals(), vars(builtins))
+print(pylookup)
+
+# collections.Counter
+# 为键准备一个整数计数器，每次更新一个键的时候都会增加这个计数器
+from collections import Counter
+ct = collections.Counter('abracasfasfaz')
+print(ct)
+ct.update('aaaaaaaaaaazz')
+print(ct)
+print(ct.most_common(2))
+
+# collections.UserDict
+# 把标准的dict用纯python又实现了一遍，用来让用户继承写子类
+class StrKeyDict(collections.UserDict):
+    def __missing__(self, key):
+        if isinstance(key, str):
+            raise KeyError(key)
+        return self[str(key)]
+
+    # data是一个dict的实例，是UserDict中最终存储数据的地方
+    def __contains__(self, item):
+        return str(key) in self.data
+
+    def __setitem__(self, key, value):
+        self.data[key] = value
+
+# 不可变映射类型
+# 比如不能让用户错误地修改某个映射
+# MappingProxyType，如果给这个类一个映射，它会返回一个只读的映射视图
+# 如果对原映射作出了改动，我们通过这个视图可以观察到，但无法通过这个视图对原映射作出修改
+from types import MappingProxyType
+d = {1: 'A'}
+d_proxy = MappingProxyType(d)
+print(d_proxy)
+print(d_proxy[1])
+# 这句报错
+# d_proxy[2] = 'x'
+d[2] = 'B'
+print(d_proxy[2])
+
+# 集合
+# a | b 返回合集
+# a & b 返回交集
+# a - b 返回差集
+# 使用这些中缀云算法让代码更易读，节约时间
+# 若a和b中任意一个对象已是集合，则a.intersection(b)求交集
+# 比 a & b求交集更高效
+
+# {1, 2, 3}这种字面量句法相比于构造方法set([1, 2, 3])更高效
+# 因为python必须从set这个名字来查询构造方法，然后新建一个列表，把列表传入构造函数中
+# 但前者会使用BUILD_SET的字节码来创建集合
+
+# 同样有集合推导的概念
+
