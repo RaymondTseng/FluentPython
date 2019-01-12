@@ -52,3 +52,42 @@ print(octets)
 # 与之相反，memoryview对象允许在二进制数据结构之间共享内存
 
 # struct模块能把打包的字节序列转换成不同类型字段组成的元组，或者反向操作
+
+# 处理UnicodeEncodeError
+city = 'São Paulo'
+# 报错，cp437无法编码ã
+# print(city.encode('cp437'))
+# 跳过无法编码的字符
+print(city.encode('cp437', errors='ignore'))
+# 把无法编码的字符替换成?
+print(city.encode('cp437', errors='replace'))
+# 把无法编码的字符替换成XML实体
+print(city.encode('cp437', errors='xmlcharrefreplace'))
+
+# UnicodeDecodeError类似
+
+# 如何找出字节序列的编码，不能，必须有人告诉你
+# 但可以通过试探和分析找出编码
+# 例如，如果b'\x00'字节经常出现，那么可能是16位或32位编码
+# 可以使用chardet侦测文件编码
+
+# b'\xff\xfe'位BOM(byte-order mark)，即字节序标记，指明编码时使用Intel CPU的小字节序
+# 在小字节序中，各个码位的最低有效字节在前面，如字母'E'的码位为U+0045，十进制数为69
+# 则在字偏移的第二位和第三位编码为69和0，在大字节序中，则为0和69
+# 为了避免混淆，utf-16编码要在编码文本前加上不可见字符，即U+FFEF
+# 因为按照设计，U+FFEF不存在，所以字节序列b'\xff\xfe'必定是不可见字符
+# utf-16le显示指明使用小字节序，utf-16be使用大字节序
+# 如果文件使用utf-16编码，而且没有BOM，那么假定它使用大字节序编码
+# 但在Intel x86中有很多文件用的是不带BOM的小字节序编码
+
+# utf-8不管设备使用哪一种字节序，生成的字节序列始终一直，不需要BOM
+# 但某些windows应用，依然会在utf-8编码的文件前添加BOM
+# Excel会根据有没有BOM确定文件是不是utf-8编码，否则使用windows代码页(codepage)编码
+# utf-8的U+FFEF字节序列是'b\xef\xbb\xbf'
+# 但python不会根据有无BOM确定文件是否为utf-8编码
+
+# 如果打开文件时没有指定encoding参数，默认值由locale.getpreferredencoding()提供
+# 如果设定了PYTHONENCODING环境变量，sys.stdout/stdin/stderr的编码使用设定的值，否则，继承所在的控制台
+# 如果输入输出到重定向文件，使用locale.getpreferredencoding()
+# sys.getfilesystemencoding()用于编码文件名，若文件名为字节序列，则不经改动传给OS API
+
