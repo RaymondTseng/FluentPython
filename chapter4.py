@@ -91,3 +91,49 @@ print(city.encode('cp437', errors='xmlcharrefreplace'))
 # 如果输入输出到重定向文件，使用locale.getpreferredencoding()
 # sys.getfilesystemencoding()用于编码文件名，若文件名为字节序列，则不经改动传给OS API
 
+s1 = 'café'
+s2 = 'cafe\u0301'
+print(s1, s2)
+print(len(s1), len(s2))
+print(s1 == s2)
+# \u0301是combining acute accent，加在e后面得到é
+# 可以使用unicodedate.normalize函数提供的Unicode规范化
+from unicodedata import normalize
+# NFC，使用最少码位构成等价的字符串
+print(len(normalize('NFC', s1)), len(normalize('NFC', s2)))
+# NFD，把组合字符分称基字符和单独的组合字符
+print(len(normalize('NFD', s1)), len(normalize('NFD', s2)))
+
+# 保存文本前，最好使用normalize清洗字符串
+
+# NFKC, NFKD对“兼容字符”有影响
+# Unicode为各个字符提供“规范化”的码位，但是为了兼容现有的标准，有些字符会出现多次
+# 各个兼容字符会被替换成一个或多个“兼容分解”的字符，即便这样有些格式损失，但仍是首选表述
+
+
+# 对于只包含latin1字符的字符串s，s.casefold()和s.lower()得到的结果往往一样
+# 除了μ和德语Eszett
+# 自python3.4起，s.casefold()和s.lower()得到不同结果的有116个码位
+# Unicode6.3命名了110122个字符，只占了了0.11%
+
+# 极端规范化，去掉变音符号
+import unicodedata
+import string
+def shave_marks(txt):
+    norm_txt = unicodedata.normalize('NFD', txt)
+    # 过滤所有组合记号
+    shaved = ''.join(c for c in norm_txt if unicodedata.combining(c))
+    return unicodedata.normalize('NFC', shaved)
+
+def shave_marks_latin(txt):
+    norm_txt = unicodedata.normalize('NFD', txt)
+    latin_base = False
+    keepers = []
+    for c in norm_txt:
+        if unicodedata.combining(c) and latin_base:
+            continue
+        keepers.append(c)
+        if not unicodedata.combining(c):
+            latin_base = c in string.ascii_letters
+    shaved = ''.join(keepers)
+    return unicodedata.normalize('NFC', shaved)
