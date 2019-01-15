@@ -137,3 +137,72 @@ def shave_marks_latin(txt):
             latin_base = c in string.ascii_letters
     shaved = ''.join(keepers)
     return unicodedata.normalize('NFC', shaved)
+
+# 不同的区域采用排序规则有所不同，葡萄牙语等很多语言按照拉丁字母表排序
+# 但重音符号和下加符对排序几乎没什么影响，如cajá视作caja
+# 在Python中，非ASCII文本的标准排序方式是使用locale.strxfrm函数
+# 这个函数会把字符串转换成适合所在区域进行比较的形式
+
+# import locale
+# locale.setlocale(locale.LC_COLLATE, 'pt_BR.UTF-8')
+# fruits = ['caju', 'atemoia', 'cajá', 'açaí', 'acerola']
+# sorted_fruits = sorted(fruits, key=locale.strxfrm)
+# print(sorted_fruits)
+# 上面这段代码在GNU/Linux中可以但在Windows中会报错
+# 原因可能是windows未实现所设区域，也可能是区域名称拼写错误
+# locale.setlocale()不推荐在代码中使用，应该在进程启动时设置好
+# 操作系统必须支持区域设置
+# 必须知道如何拼写区域名称
+# 操作系统的制作者必须正确实现了所设的区域
+
+# 使用PyUCA进行Unicode排序
+import pyuca
+coll = pyuca.Collator()
+fruits = ['caju', 'atemoia', 'cajá', 'açaí', 'acerola']
+sorted_fruits = sorted(fruits, key=coll.sort_key)
+print(sorted_fruits)
+# pyuca只支持python3
+# 使用Collator构造方法可以定制排序方式，默认使用自带的allkeys.txt
+# 即Unicode6.3.0的Default Unicode Collation Element Table
+
+# Unicode标准提供了一个完整的数据库，不仅包括码位与字符名称之间的映射
+# 还有各个字符的元数据，以及字符之间的关系
+# 如字符是否可以打印，是否是字母，是否是数字
+# unicodedata中有几个函数可以获取字符的元数据
+# 如字符在标准官方名称是不是组合字符，以及符号对应人类的可读数字
+
+# re模块对Unicode的支持并不充分，regex的目的是取代它
+
+# 支持字符串和字符序列的双模式API
+# 然后根据类型展现不同的行为，re和os中就有这样的函数
+
+import re
+# 字符串模式
+re_numbers_str = re.compile(r'\d+')
+re_words_str = re.compile(r'\w+')
+# 字节序列模式
+re_numbers_bytes = re.compile(rb'\d+')
+re_words_bytes = re.compile(rb'\w+')
+
+# 泰达米尔数字
+text_str = ("Ramanujan saw \u0be7\u0bed\u0be8\u0bef"
+            " as 1729 = 1³ + 12³ = 9³ + 10³.")
+text_bytes = text_str.encode('utf-8')
+print('Text', repr(text_str), sep='\n  ')
+print('Numbers')
+# 可以匹配泰达米尔数字和ASCII数字
+print('  str  :', re_numbers_str.findall(text_str))
+# 只能匹配ASCII数字
+print('  bytes  :', re_numbers_bytes.findall(text_bytes))
+print('Words')
+print('  str  :', re_words_str.findall(text_str))
+print('  bytes  :', re_words_bytes.findall(text_bytes))
+
+# 对于os也有类似的函数
+# os.listdir('.')返回字符串
+# os.listdir(b'.')返回字节序列
+
+# python3.1中引入surrogateescape把每个无法解码的字节替换成
+# Unicode中U+DC00到U+DCFF之间的码位，这些码位没有被分配字符
+
+
