@@ -108,3 +108,40 @@ def clip(text:str, max_len:'int > 0'=80) -> str:
 
 # 注解不会做任何处理，只是存储在函数的__annotations__属性中（一个字典）
 # 可以使用signature.return_annotation提取注解
+
+# 支持函数式编程的包
+# 普通计算阶乘
+from functools import reduce
+def fact(n):
+    return reduce(lambda a, b: a*b, range(1, n+1))
+
+# 使用operator计算
+from operator import mul
+def _fact(n):
+    return reduce(mul, range(1, n+1))
+
+# operator中有一类函数，能替代从序列中取出元素或读取对象属性的lambda表达式
+# 如itemgetter和attrgetter
+# itemgetter(1)的作用与lambda fields: fields[1]一样
+# 多个参数传给itemgetter，它构建的函数会返回提取的值构成的元组
+# itemgetter使用[]运算符，所以可以支持映射和任何实现__getitem__方法的类
+# attrgetter类似，如attrgetter('name', 'coord.lat')提取相应字段的值
+
+import operator
+print([name for name in dir(operator) if not name.startswith('_')])
+
+# i开头，后面是另一个运算符的那些名称，对应的是增量赋值运算符，如+=，&=等
+# 如果第一个参数是可变的，那么这些运算符函数会就地修改它
+
+# methodcaller创建的函数会在对象上调用参数指定的方法
+from operator import methodcaller
+s = 'The time has come'
+upcase = methodcaller('upper')
+print(upcase(s))
+
+# 使用functools.partial冻结参数
+# 这个函数用于基于一个函数创建一个新的可调用对象，把原函数的某些参数固定，使得参数更少
+from functools import partial
+triple = partial(mul, 3)
+print(triple(7))
+print(list(map(triple, range(1, 10))))
